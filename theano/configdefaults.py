@@ -319,6 +319,14 @@ AddConfigVar(
     IntParam(7),
     in_c_key=False)
 
+AddConfigVar(
+    'traceback.user_limit',
+    "Default user limit for the number of stack to attach to nodes. -1 mean all.",
+    # Only used in gof.utils.add_tag_trace() as the default for
+    # limit argument.
+    IntParam(7),
+    in_c_key=False)
+
 AddConfigVar('experimental.mrg',
              "Another random number generator that work on the gpu",
              BoolParam(False))

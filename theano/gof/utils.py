@@ -50,7 +50,7 @@ if sys.version_info[:2] > (3, 4):
     simple_extract_stack = traceback.extract_stack
 
 
-def add_tag_trace(thing, user_line=1):
+def add_tag_trace(thing, user_line=None):
     """Add tag.trace to an node or variable.
 
     The argument is returned after being affected (inplace).
@@ -61,6 +61,8 @@ def add_tag_trace(thing, user_line=1):
         of stack level we look.
 
     """
+    if user_line is None:
+        user_line = config.traceback.user_limit
     limit = config.traceback.limit
     if limit == -1:
         limit = None
@@ -89,7 +91,7 @@ def add_tag_trace(thing, user_line=1):
             break
     # Keep only the most recent stack level.
     # The order is from the oldest to the newest
-    if len(tr) > user_line:
+    if user_line > -1 and len(tr) > user_line:
         tr = tr[-user_line:]
     thing.tag.trace = tr
     return thing
