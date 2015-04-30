@@ -344,6 +344,7 @@ class Variable(Node):
             raise TypeError("name must be a string", name)
         self.name = name
         self.auto_name = 'auto_' + str(next(self.__count__))
+        utils.add_tag_trace(self)
 
     def __str__(self):
         """WRITEME"""

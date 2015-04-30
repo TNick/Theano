@@ -15,6 +15,7 @@ if cuda_available:
 class MultinomialFromUniform(Op):
     '''Converts samples from a uniform into sample from a multinomial.'''
     def __init__(self, odtype):
+        super(MultinomialFromUniform, self).__init__()
         self.odtype = odtype
 
     def __eq__(self, other):

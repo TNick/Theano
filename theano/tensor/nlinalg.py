@@ -35,7 +35,7 @@ class MatrixPinv(Op):
     __props__ = ()
 
     def __init__(self):
-        pass
+        super(MatrixPinv, self).__init__()
 
     def make_node(self, x):
         x = as_tensor_variable(x)
@@ -62,7 +62,7 @@ class MatrixInverse(Op):
     __props__ = ()
 
     def __init__(self):
-        pass
+        super(MatrixInverse, self).__init__()
 
     def make_node(self, x):
         x = as_tensor_variable(x)
@@ -134,6 +134,9 @@ class AllocDiag(Op):
     """
     Allocates a square matrix with the given vector as its diagonal.
     """
+    def __init__(self):
+        super(AllocDiag, self).__init__()
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -167,6 +170,7 @@ class ExtractDiag(Op):
     :note: work on the GPU.
     """
     def __init__(self, view=False):
+        super(ExtractDiag, self).__init__()
         self.view = view
         if self.view:
             self.view_map = {0: [0]}
@@ -258,6 +262,9 @@ class Det(Op):
     """Matrix determinant
     Input should be a square matrix
     """
+    def __init__(self, view=False):
+        super(Det, self).__init__()
+        
     def make_node(self, x):
         x = as_tensor_variable(x)
         assert x.ndim == 2
@@ -291,6 +298,9 @@ class Eig(Op):
     _numop = staticmethod(numpy.linalg.eig)
     __props__ = ()
 
+    def __init__(self, view=False):
+        super(Eig, self).__init__()
+    
     def make_node(self, x):
         x = as_tensor_variable(x)
         assert x.ndim == 2
@@ -317,6 +327,7 @@ class Eigh(Eig):
     __props__ = ('UPLO',)
 
     def __init__(self, UPLO='L'):
+        super(Eigh, self).__init__()
         assert UPLO in ['L', 'U']
         self.UPLO = UPLO
 
@@ -383,6 +394,7 @@ class EighGrad(Op):
     __props__ = ('UPLO',)
 
     def __init__(self, UPLO='L'):
+        super(EighGrad, self).__init__()
         assert UPLO in ['L', 'U']
         self.UPLO = UPLO
         if UPLO == 'L':
@@ -453,6 +465,7 @@ class QRFull(Op):
     __props__ = ('mode',)
 
     def __init__(self, mode):
+        super(QRFull, self).__init__()
         self.mode = mode
 
     def make_node(self, x):
@@ -479,6 +492,7 @@ class QRIncomplete(Op):
     __props__ = ('mode',)
 
     def __init__(self, mode):
+        super(QRIncomplete, self).__init__()
         self.mode = mode
 
     def make_node(self, x):
@@ -581,6 +595,7 @@ class SVD(Op):
             Whether or not to compute u and v in addition to s.
             True by default.
         """
+        super(SVD, self).__init__()
         self.full_matrices = full_matrices
         self.compute_uv = compute_uv
 
@@ -630,6 +645,9 @@ def test_matrix_inverse_solve():
 
 
 class lstsq(Op):
+    def __init__(self):
+        super(lstsq, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 

@@ -75,6 +75,9 @@ class DotModulo(Op):
 
     We do this 2 times on 2 triple inputs and concatenating the output
     """
+    def __init__(self):
+        super(DotModulo, self).__init__()
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -280,7 +283,7 @@ def mrg_next_value(rstate, new_rstate):
 
 class mrg_uniform_base(Op):
     def __init__(self, output_type, inplace=False):
-        Op.__init__(self)
+        super(mrg_uniform_base, self).__init__()
         self.output_type = output_type
         self.inplace = inplace
         if inplace:

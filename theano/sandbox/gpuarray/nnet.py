@@ -23,7 +23,10 @@ class GpuCrossentropySoftmaxArgmax1HotWithBias(Op):
     """
     nin = 3
     nout = 3
-
+    
+    def __init__(self):
+        super(GpuCrossentropySoftmaxArgmax1HotWithBias, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -275,8 +278,8 @@ class GpuCrossentropySoftmax1HotWithBiasDx(Op):
     nin = 3
     nout = 1
     """Gradient wrt x of the CrossentropySoftmax1Hot Op"""
-    def __init__(self, **kwargs):
-        Op.__init__(self, **kwargs)
+    def __init__(self, **kwargs):        
+        super(GpuCrossentropySoftmax1HotWithBiasDx, self).__init__(**kwargs)
 
     def __eq__(self, other):
         return type(self) == type(other)
@@ -465,6 +468,9 @@ class GpuSoftmax (Op):
     """
     Implement Softmax on the gpu.
     """
+    def __init__(self):        
+        super(GpuSoftmax, self).__init__()
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -658,6 +664,9 @@ class GpuSoftmaxWithBias (Op):
     nin = 2
     nout = 1
 
+    def __init__(self):        
+        super(GpuSoftmaxWithBias, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 

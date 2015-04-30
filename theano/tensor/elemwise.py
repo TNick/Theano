@@ -120,11 +120,13 @@ class DimShuffle(Op):
         If input.broadcastable[i] == False then i must be found in new_order.
         Broadcastable dimensions, on the other hand, can be discarded.
         """
+        super(DimShuffle, self).__init__()
         input_broadcastable = tuple(input_broadcastable)
         self.input_broadcastable = input_broadcastable
         new_order = tuple(new_order)
         self.new_order = new_order
         self.inplace = inplace
+        
 
         for i, j in enumerate(new_order):
             if j != 'x':
@@ -1257,6 +1259,7 @@ class CAReduce(Op):
                 - list of dimensions that we want to reduce
                 - if None, all dimensions are reduced
         """
+        super(CAReduce, self).__init__()
         if scalar_op.nin not in [-1, 2] or scalar_op.nout != 1:
             raise NotImplementedError((
                 "CAReduce only supports binary functions with a single "

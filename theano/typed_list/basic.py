@@ -57,6 +57,9 @@ class GetItem(Op):
     # See doc in instance of this Op or function after this class definition.
     view_map = {0: [0]}
 
+    def __init__(self):        
+        super(GetItem, self).__init__()
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -115,6 +118,7 @@ Get specified slice of a typed list.
 class Append(Op):
     # See doc in instance of this Op after the class definition.
     def __init__(self, inplace=False):
+        super(Append, self).__init__()
         self.inplace = inplace
         if self.inplace:
             self.destroy_map = {0: [0]}
@@ -187,6 +191,7 @@ Append an element at the end of another list.
 class Extend(Op):
     # See doc in instance of this Op after the class definition.
     def __init__(self, inplace=False):
+        super(Extend, self).__init__()
         self.inplace = inplace
         if self.inplace:
             self.destroy_map = {0: [0]}
@@ -265,6 +270,7 @@ Append all elements of a list at the end of another list.
 class Insert(Op):
     # See doc in instance of this Op after the class definition.
     def __init__(self, inplace=False):
+        super(Insert, self).__init__()
         self.inplace = inplace
         if self.inplace:
             self.destroy_map = {0: [0]}
@@ -343,6 +349,7 @@ Insert an element at an index in a typed list.
 class Remove(Op):
     # See doc in instance of this Op after the class definition.
     def __init__(self, inplace=False):
+        super(Remove, self).__init__()
         self.inplace = inplace
         if self.inplace:
             self.destroy_map = {0: [0]}
@@ -397,6 +404,7 @@ remove = Remove()
 class Reverse(Op):
     # See doc in instance of this Op after the class definition.
     def __init__(self, inplace=False):
+        super(Reverse, self).__init__()
         self.inplace = inplace
         if self.inplace:
             self.destroy_map = {0: [0]}
@@ -459,6 +467,9 @@ Reverse the order of a typed list.
 
 class Index(Op):
     # See doc in instance of this Op after the class definition.
+    def __init__(self):
+        super(Index, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -489,6 +500,9 @@ index_ = Index()
 
 class Count(Op):
     # See doc in instance of this Op after the class definition.
+    def __init__(self):
+        super(Count, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -532,7 +546,9 @@ Count the number of times an element is in the typed list.
 
 class Length(Op):
     # See doc in instance of this Op after the class definition.
-
+    def __init__(self):
+        super(Length, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -572,6 +588,8 @@ Returns the size of a list.
 
 
 class MakeList(Op):
+    def __init__(self):
+        super(MakeList, self).__init__()
 
     def __eq__(self, other):
         return type(self) == type(other)

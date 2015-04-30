@@ -26,6 +26,7 @@ class MyType(Type):
 class MyOp(Op):
 
     def __init__(self, name, dmap=None, x=None):
+        super(MyOp, self).__init__()
         if dmap is None:
             dmap = {}
         self.name = name

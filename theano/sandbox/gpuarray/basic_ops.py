@@ -186,6 +186,9 @@ class GpuKernelBase(object):
 
 
 class HostFromGpu(Op):
+    def __init__(self):
+        super(HostFromGpu, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -269,6 +272,9 @@ host_from_gpu = HostFromGpu()
 
 
 class GpuFromHost(Op):
+    def __init__(self):
+        super(GpuFromHost, self).__init__()
+
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -329,6 +335,9 @@ gpu_from_host = GpuFromHost()
 class GpuFromCuda(Op):
     view_map = {0: [0]}
 
+    def __init__(self):
+        super(GpuFromCuda, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -461,6 +470,9 @@ gpu_from_cuda = GpuFromCuda()
 class CudaFromGpu(Op):
     view_map = {0: [0]}
 
+    def __init__(self):
+        super(CudaFromGpu, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 
@@ -729,7 +741,10 @@ class GpuContiguous(Op):
     not already c contiguous.
     """
     view_map = {0: [0]}
-
+    
+    def __init__(self):
+        super(GpuContiguous, self).__init__()
+        
     def __eq__(self, other):
         return type(self) == type(other)
 

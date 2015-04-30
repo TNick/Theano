@@ -19,6 +19,7 @@ class LoadFromDisk(Op):
     @note: Non-differentiable.
     """
     def __init__(self, dtype, broadcastable, mmap_mode=None):
+        super(LoadFromDisk, self).__init__()
         self.dtype = numpy.dtype(dtype)  # turn "float64" into numpy.float64
         self.broadcastable = broadcastable
         if mmap_mode not in (None, 'c'):
@@ -105,6 +106,7 @@ class MPIRecv(Op):
     """
 
     def __init__(self, source, tag, shape, dtype):
+        super(MPIRecv, self).__init__()
         self.source = source
         self.tag = tag
         self.shape = shape
@@ -152,6 +154,7 @@ class MPIRecvWait(Op):
     """
 
     def __init__(self, tag):
+        super(MPIRecvWait, self).__init__()
         self.tag = tag
 
     def __eq__(self, other):
@@ -195,6 +198,7 @@ class MPISend(Op):
     """
 
     def __init__(self, dest, tag):
+        super(MPISend, self).__init__()
         self.dest = dest
         self.tag = tag
         self._info = (dest, tag)
@@ -234,6 +238,7 @@ class MPISendWait(Op):
     """
 
     def __init__(self, tag):
+        super(MPISendWait, self).__init__()
         self.tag = tag
 
     def __eq__(self, other):

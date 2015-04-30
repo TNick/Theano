@@ -221,6 +221,7 @@ class Print(Op):
     __props__ = ('message', 'attrs', 'global_fn')
 
     def __init__(self, message="", attrs=("__str__",), global_fn=_print_fn):
+        super(Print, self).__init__()
         self.message = message
         self.attrs = tuple(attrs)  # attrs should be a hashable iterable
         self.global_fn = global_fn
@@ -543,7 +544,7 @@ Print to the terminal a math-like expression.
 default_colorCodes = {'GpuFromHost': 'red',
                       'HostFromGpu': 'red',
                       'Scan': 'yellow',
-                      'Shape': 'cyan',
+                      'Shpae': 'cyan',
                       'IfElse': 'magenta',
                       'Elemwise': '#FFAABB',  # dark pink
                       'Subtensor': '#FFAAFF',  # purple
@@ -812,6 +813,8 @@ def pydotprint(fct, outfile=None,
     apply_shape = 'ellipse'
     var_shape = 'box'
     for node_idx, node in enumerate(topo):
+        #if node_idx > 1:
+        #    break
         astr = apply_name(node)
 
         use_color = None

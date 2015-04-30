@@ -373,6 +373,7 @@ class Gemv(Op):
     output is a vector that can be inplace on y
     """
     def __init__(self, inplace):
+        super(Gemv, self).__init__()
         self.inplace = inplace
         if inplace:
             self.destroy_map = {0: [0]}
@@ -464,6 +465,7 @@ class Ger(Op):
     and override the make_thunk() method to use Scipy and C respectively.
     """
     def __init__(self, destructive):
+        super(Ger, self).__init__()
         self.destructive = destructive
         if destructive:
             self.destroy_map = {0: [0]}
@@ -580,6 +582,9 @@ class GemmRelated(Op):
 
     This class provides a kind of templated gemm Op.
     """
+    def __init__(self):
+        super(GemmRelated, self).__init__()
+
     def __eq__(self, other):
         return (type(self) == type(other))
 
@@ -928,6 +933,7 @@ class Gemm(GemmRelated):
     E_float = 'gemm requires floating-point dtypes'
 
     def __init__(self, inplace):
+        super(Gemm, self).__init__()
         self.__setstate__({'inplace': inplace})
 
     def __eq__(self, other):

@@ -79,6 +79,7 @@ class DiagonalSubtensor(Op):
         return "%s" % self.__class__.__name__
 
     def __init__(self, inplace=False):
+        super(DiagonalSubtensor, self).__init__()
         self.inplace = inplace
         if inplace:
             self.view_map = {0: [0]}
@@ -123,6 +124,7 @@ class IncDiagonalSubtensor(Op):
         return "%s" % self.__class__.__name__
 
     def __init__(self, inplace=False):
+        super(IncDiagonalSubtensor, self).__init__()
         self.inplace = inplace
         if inplace:
             self.destroy_map = {0: [0]}

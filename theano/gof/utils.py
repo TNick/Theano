@@ -61,13 +61,17 @@ def add_tag_trace(thing, user_line=None):
         of stack level we look.
 
     """
+    # if the trace was already added keep that
+    if thing.tag.__dict__.has_key('trace'):
+        return thing
+        
     if user_line is None:
         user_line = config.traceback.user_limit
     limit = config.traceback.limit
     if limit == -1:
         limit = None
     tr = simple_extract_stack(limit=limit)[:-1]
-    # Different python version use different sementic for
+    # Different python version use different semantic for
     # limit. python 2.7 include the call to extrack_stack. The -1 get
     # rid of it.
 
@@ -81,7 +85,7 @@ def add_tag_trace(thing, user_line=None):
                   "theano/sandbox/",
                   "theano/scan_module/",
                   "theano/sparse/",
-                  "theano/typed_list/",
+                  "theano/typed_list/"
         ]:
             if p in file_path:
                 tr = tr[:-1]
@@ -89,6 +93,14 @@ def add_tag_trace(thing, user_line=None):
                 break
         if not rm:
             break
+    
+    string_loc = None
+    for i, trel in enumerate(tr):
+        if trel[0] == '<string>':
+            string_loc = i
+            break
+    if not string_loc is None:
+        tr = tr[string_loc+1:]
     # Keep only the most recent stack level.
     # The order is from the oldest to the newest
     if user_line > -1 and len(tr) > user_line:

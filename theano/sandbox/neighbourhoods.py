@@ -72,6 +72,7 @@ class NeighbourhoodsFromImages(Op):
             You shouldn't have to use this. Only used by child class
             ImagesFromNeighbourhoods which simply reverses the assignment.
         """
+        super(NeighbourhoodsFromImages, self).__init__()
         self.n_dims_before = n_dims_before
         self.dims_neighbourhoods = dims_neighbourhoods
         if not strides is None:

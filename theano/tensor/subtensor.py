@@ -434,6 +434,7 @@ class Subtensor(Op):
         return map(conv, real_idx)
 
     def __init__(self, idx_list):
+        super(Subtensor, self).__init__()
         self.idx_list = tuple(map(self.convert, idx_list))
 
     @staticmethod
@@ -1177,6 +1178,7 @@ class IncSubtensor(Op):
 
     def __init__(self, idx_list, inplace=False, set_instead_of_inc=False,
                  destroyhandler_tolerate_aliased=None):
+        super(IncSubtensor, self).__init__()
         if destroyhandler_tolerate_aliased is None:
             destroyhandler_tolerate_aliased = []
         self.idx_list = map(Subtensor.convert, idx_list)
@@ -1605,6 +1607,7 @@ class AdvancedSubtensor1(Op):
     __props__ = ()
 
     def __init__(self, sparse_grad=False):
+        super(AdvancedSubtensor1, self).__init__()
         self.sparse_grad = sparse_grad
 
     def make_node(self, x, ilist):
@@ -1787,6 +1790,7 @@ class AdvancedIncSubtensor1(Op):
     __props__ = ('inplace', 'set_instead_of_inc')
 
     def __init__(self, inplace=False, set_instead_of_inc=False):
+        super(AdvancedIncSubtensor1, self).__init__()
         self.inplace = inplace
         self.set_instead_of_inc = set_instead_of_inc
         if inplace:
@@ -2032,7 +2036,10 @@ class AdvancedSubtensor(Op):
     # Should be used by __getitem__ and __getslice__, as follow:
     # AdvancedSubtensor()(self, *args),
     # if args contains and advanced indexing pattern
-
+    
+    def __init__(self):
+        super(AdvancedSubtensor, self).__init__()
+        
     def __eq__(self, other):
         return self.__class__ == other.__class__
 
@@ -2117,6 +2124,7 @@ class AdvancedIncSubtensor(Op):
     """
 
     def __init__(self, inplace=False, set_instead_of_inc=False):
+        super(AdvancedIncSubtensor, self).__init__()
         self.inplace = inplace
         self.set_instead_of_inc = set_instead_of_inc
         # The assert is needed as in the pass the first argument was

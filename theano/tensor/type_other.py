@@ -21,6 +21,10 @@ def as_int_none_variable(x):
 
 
 class MakeSlice(Op):
+    
+    def __init__(self):
+        super(MakeSlice, self).__init__()
+        
     def make_node(self, slc, stop=None, step=None):
         # We need to accept and handle in make_node inputs the node
         # inputs to allow redoing a new op elsewhere in the graph by

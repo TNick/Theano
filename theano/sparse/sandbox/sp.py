@@ -40,7 +40,7 @@ class ConvolutionIndices(Op):
        patch. Convolution is then simply the dot product of (img x M)
        and the kernels.
     """
-
+        
     @staticmethod
     def sparse_eval(inshp, kshp, nkern, (dx, dy)=(1, 1), mode='valid'):
         return convolution_indices.evaluate(inshp, kshp, (dx, dy),
@@ -251,6 +251,9 @@ class ConvolutionIndices(Op):
 
         return rval
 
+    def __init__(self):
+        super(ConvolutionIndices, self).__init__()
+    
     def perform(self, node, (inshp, kshp),\
                 (out_indices, out_indptr, spmat_shape)):
         indices, indptr, spmatshp, outshp = self.evaluate(inshp, kshp)

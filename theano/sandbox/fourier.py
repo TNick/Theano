@@ -10,6 +10,8 @@ import numpy
 
 
 class GradTodo(Op):
+    def __init__(self):
+        super(GradTodo, self).__init__()
     def make_node(self, x):
         return Apply(self, [x], [x.type()])
     def perform(self, node, inputs, outputs):
@@ -40,6 +42,7 @@ class FFT(Op):
     """Only return the first half (positive-valued) of the frequency components"""
 
     def __init__(self, half=False, inverse=False):
+        super(FFT, self).__init__()
         self.half = half
         self.inverse = inverse
 

@@ -34,6 +34,9 @@ class BreakRop(Op):
     """
     @note: Non-differentiable.
     """
+    def __init__(self):
+        super(BreakRop, self).__init__()
+
     def __hash__(self):
         return hash(type(self))
 

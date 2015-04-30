@@ -74,6 +74,7 @@ class Hint(Op):
     __props__ = ('hints',)
 
     def __init__(self, **kwargs):
+        super(Hint, self).__init__()
         self.hints = tuple(kwargs.items())
         self.view_map = {0: [0]}
 

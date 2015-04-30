@@ -26,6 +26,7 @@ class Images2Neibs(Op):
             Reshapes the input as a 2D tensor where each row is an
             pooling example
         """
+        super(Images2Neibs, self).__init__()
         if mode not in ['valid', 'wrap_centered', 'ignore_borders']:
             raise NotImplementedError("Only the mode valid, ignore_borders"
                                       " and wrap_centered have been"

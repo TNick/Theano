@@ -214,6 +214,7 @@ class DownsampleFactorMax(Op):
             'average_exc_pad' include it)
 
         """
+        super(DownsampleFactorMax, self).__init__()
         self.ds = tuple(ds)
         if not all([isinstance(d, int) for d in ds]):
             raise ValueError(
@@ -471,6 +472,7 @@ class DownsampleFactorMaxGrad(Op):
     __props__ = ('ds', 'ignore_border', 'st', 'padding', 'mode')
 
     def __init__(self, ds, ignore_border, st=None, padding=(0, 0), mode='max'):
+        super(DownsampleFactorMaxGrad, self).__init__()
         self.ds = tuple(ds)
         self.ignore_border = ignore_border
         if st is None:
@@ -749,6 +751,7 @@ class DownsampleFactorMaxGradGrad(Op):
         return rval
 
     def __init__(self, ds, ignore_border, st=None):
+        super(DownsampleFactorMaxGradGrad, self).__init__()
         self.ds = tuple(ds)
         self.ignore_border = ignore_border
         if st is None:

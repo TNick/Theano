@@ -5,6 +5,7 @@ import numpy
 
 import theano
 import theano.typed_list
+from theano import function
 from theano import tensor as T
 from theano.tensor.type_other import SliceType
 from theano.typed_list.type import TypedListType
@@ -555,7 +556,7 @@ class test_length(unittest.TestCase):
         self.assertTrue(f([x, x]) == 2)
 
 
-class T_MakeList(unittest.TestCase):
+class test_make_list(unittest.TestCase):
 
     def test_wrong_shape(self):
         a = T.vector()
@@ -563,7 +564,7 @@ class T_MakeList(unittest.TestCase):
 
         self.assertRaises(TypeError, make_list, (a, b))
 
-    def correct_answer(self):
+    def test_correct_answer(self):
         a = T.matrix()
         b = T.matrix()
 
@@ -580,5 +581,5 @@ class T_MakeList(unittest.TestCase):
         fc = function([a, b], c)
         fz = function([x, y], z)
 
-        self.assertTrue(f([A, B]) == [A, B])
-        self.assertTrue(f([X, Y]) == [X, Y])
+        self.assertTrue(fc([A, B]) == [A, B])
+        self.assertTrue(fz([X, Y]) == [X, Y])

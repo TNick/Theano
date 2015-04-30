@@ -671,6 +671,12 @@ class Op(utils.object2, PureOp, CLinkerOp):
 
     def __init__(self, use_c_code=theano.config.cxx):
         self._op_use_c_code = use_c_code
+        self.tag = utils.scratchpad()
+        utils.add_tag_trace(self)
+        self.backup_tag = utils.scratchpad()
+        self.backup_tag.trace = self.tag.trace
+        super(Op, self).__init__()
+        
 
     def _props(self):
         return tuple(getattr(self, a) for a in self.__props__)
@@ -936,10 +942,11 @@ class OpenMPOp(Op):
     """
 
     def __init__(self, openmp=None):
+        super(OpenMPOp, self).__init__()
         if openmp is None:
             openmp = theano.config.openmp
         self.openmp = openmp
-
+        
     def __setstate__(self, d):
         self.__dict__.update(d)
         # If we unpickle old op
@@ -1066,6 +1073,7 @@ class COp(Op):
         Sections are loaded from files in order with sections in later
         files overriding sections in previous files.
         """
+        super(COp, self).__init__()
         if not isinstance(func_files, list):
             func_files = [func_files]
 

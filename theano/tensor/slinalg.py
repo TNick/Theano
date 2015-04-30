@@ -48,6 +48,7 @@ class Cholesky(Op):
     __props__ = ('lower', 'destructive')
 
     def __init__(self, lower=True):
+        super(Cholesky, self).__init__()
         self.lower = lower
         self.destructive = False
 
@@ -80,6 +81,7 @@ class CholeskyGrad(Op):
     __props__ = ('lower', 'destructive')
 
     def __init__(self, lower=True):
+        super(CholeskyGrad, self).__init__()
         self.lower = lower
         self.destructive = False
 
@@ -149,6 +151,7 @@ class Solve(Op):
                  lower=False,
                  overwrite_A=False,
                  overwrite_b=False):
+        super(Solve, self).__init__()
         if A_structure not in MATRIX_STRUCTURES:
             raise ValueError('Invalid matrix structure argument', A_structure)
         self.A_structure = A_structure
@@ -208,6 +211,7 @@ class Eigvalsh(Op):
     __props__ = ('lower',)
 
     def __init__(self, lower=True):
+        super(Eigvalsh, self).__init__()
         assert lower in [True, False]
         self.lower = lower
 
@@ -264,6 +268,7 @@ class EigvalshGrad(Op):
     __props__ = ('lower',)
 
     def __init__(self, lower=True):
+        super(EigvalshGrad, self).__init__()
         assert lower in [True, False]
         self.lower = lower
         if lower:
@@ -344,6 +349,9 @@ class Expm(Op):
     """Compute the matrix exponential of a square array
     """
 
+    def __init__(self):
+        super(Expm, self).__init__()
+
     def make_node(self, A):
         assert imported_scipy, (
             "Scipy not available. Scipy is needed for the Expm op")
@@ -367,6 +375,9 @@ class ExpmGrad(Op):
     """Gradient of the matrix exponential of a square array.
     """
 
+    def __init__(self):
+        super(ExpmGrad, self).__init__()
+        
     def make_node(self, A, gw):
         assert imported_scipy, (
             "Scipy not available. Scipy is needed for the Expm op")
