@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 _logger = logging.getLogger('theano.sandbox.cuda.opt')
 
@@ -5,6 +6,7 @@ import copy
 import sys
 import time
 import warnings
+import pdb
 
 import numpy
 
@@ -24,7 +26,7 @@ from theano.sandbox.cuda.basic_ops import (
     GpuElemwise, GpuDimShuffle, GpuReshape, GpuCAReduce, GpuFlatten,
     GpuSubtensor, GpuAdvancedSubtensor1,
     GpuAdvancedIncSubtensor1, GpuAdvancedIncSubtensor1_dev20,
-    GpuIncSubtensor, gpu_alloc, GpuAlloc, gpu_shape, GpuSplit)
+    GpuIncSubtensor, gpu_alloc, GpuAlloc, gpu_shape, GpuSplit, GpuAllocEmpty)
 
 from theano.sandbox.cuda.type import CudaNdarrayType
 from theano.sandbox.cuda.blas import (gpu_dot22, gpu_dot22scalar,
@@ -48,7 +50,9 @@ from theano.sandbox.cuda.nnet import (
 
 from theano.sandbox.cuda.elemwise import SupportCodeError
 from theano.scalar.basic_scipy import Erfinv
+from theano.scalar.basic_scipy import Erfcx
 from theano.sandbox.cuda.elemwise import erfinv_gpu
+from theano.sandbox.cuda.elemwise import erfcx_gpu
 from theano.sandbox.cuda.var import CudaNdarrayConstant
 from theano.sandbox.cuda import gpu_optimizer, register_opt, gpu_seqopt, GpuOp
 from theano.scan_module import scan_utils, scan_op, scan_opt
@@ -237,6 +241,8 @@ def local_gpu_elemwise_0(node):
 
                 if isinstance(node.op.scalar_op, Erfinv):
                     new_op = GpuElemwise(erfinv_gpu)
+                elif isinstance(node.op.scalar_op, Erfcx):
+                    new_op = GpuElemwise(erfcx_gpu)
                 else:
                     try:
                         new_op = GpuElemwise(node.op.scalar_op)
@@ -298,6 +304,8 @@ def local_gpu_elemwise_1(node):
 
             if isinstance(elemwise_node.op.scalar_op, Erfinv):
                 new_op = GpuElemwise(erfinv_gpu)
+            elif isinstance(elemwise_node.op.scalar_op, Erfcx):
+                new_op = GpuElemwise(erfcx_gpu)
             else:
                 try:
                     new_op = GpuElemwise(elemwise_node.op.scalar_op)
@@ -445,6 +453,27 @@ def local_gpu_dot_to_dot22(node):
                                                 shape_out))]
     return False
 
+@local_optimizer(None)
+def local_assert_no_cpu_op(node):
+    if not isinstance(node.op, GpuOp) and all([var.owner and isinstance(var.owner.op,
+        HostFromGpu) for var in node.inputs]) and any([[c for c in var.clients
+                if isinstance(c[0].op, GpuFromHost)] for var in node.outputs]):
+            if config.assert_no_cpu_op == "warn":
+                _logger.warning(("CPU op %s is detected in the computational"
+                                 " graph") % node)
+            elif config.assert_no_cpu_op == "raise":
+                raise AssertionError("The op %s is on CPU." % node)
+            elif config.assert_no_cpu_op == "pdb":
+                pdb.set_trace()
+
+    return None
+
+# Register the local_assert_no_cpu_op:
+assert_no_cpu_op = theano.tensor.opt.in2out(local_assert_no_cpu_op,
+                                            name='assert_no_cpu_op')
+# 49.2 is after device specialization & fusion optimizations for last transfers
+theano.compile.optdb.register('assert_no_cpu_op', assert_no_cpu_op, 49.2)
+
 
 @register_opt()
 @local_optimizer([theano.ifelse.IfElse, gpu_from_host])
@@ -468,12 +497,19 @@ def local_gpu_lazy_ifelse(node):
             # Should not happen, but just in case
             if isinstance(c.type, CudaNdarrayType):
                 c = host_from_gpu(c)
+            if all([isinstance(o.type, CudaNdarrayType) or o.dtype != 'float32'
+                    for o in outs]):
+                return
 
             for i in range(len(outs)):
-                if not isinstance(outs[i], CudaNdarrayType):
+                if (not isinstance(outs[i].type, CudaNdarrayType) and
+                        outs[i].dtype == 'float32'):
                     outs[i] = gpu_from_host(outs[i])
-            return [host_from_gpu(out) for out in
-                    gpu_ifelse.make_node(c, *outs).outputs]
+            outs = gpu_ifelse(c, *outs, return_list=True)
+            for i in range(len(outs)):
+                if isinstance(outs[i].type, CudaNdarrayType):
+                    outs[i] = host_from_gpu(outs[i])
+            return outs
 
     if isinstance(node.op, GpuFromHost):
         host_input = node.inputs[0]
@@ -493,11 +529,14 @@ def local_gpu_lazy_ifelse(node):
             # Should not happen, but just in case
             if isinstance(c.type, CudaNdarrayType):
                 c = host_from_gpu(c)
+            if all([isinstance(o.type, CudaNdarrayType) or o.dtype != 'float32'
+                    for o in outs]):
+                return
 
             for i in range(len(outs)):
-                if not isinstance(outs[i], CudaNdarrayType):
+                if (not isinstance(outs[i].type, CudaNdarrayType) and
+                        outs[i].dtype == 'float32'):
                     outs[i] = gpu_from_host(outs[i])
-
             outs = gpu_ifelse.make_node(c, *outs).outputs
             return outs
 
@@ -531,6 +570,8 @@ def local_gpu_dot22(node):
 @local_optimizer([gpu_from_host, tensor.blas.Dot22Scalar])
 def local_gpu_dot22scalar(node):
     """
+    Deprecated : _dot22scalar has been replace by gemm
+    see Dot22scalar for more details
     gpu_from_host(dot22scalar) -> gpudot(gpu_from_host)
 
     dot(host_from_gpu) -> host_from_gpu(gpudot22scalar)
@@ -796,12 +837,12 @@ def local_gpu_careduce(node):
                             # We should not loose the information
                             # that one dimensions was
                             # broadcastable.
-                            print >> sys.stderr, (
+                            print((
                                 "WARNING: local_gpu_careduce got type"
                                 " wrong",
                                 rval.type, out.type,
                                 node.inputs[0].type, x.type,
-                                node)
+                                node), file=sys.stderr)
                             return None
                     rval = tensor.patternbroadcast(rval,
                                                    out.broadcastable)
@@ -1816,7 +1857,7 @@ def get_device_type_sizes():
         assert int_size == gpu_int_size, (int_size, gpu_int_size)
         del gpu_int_size
         del t
-    except Exception, e:
+    except Exception as e:
         _logger.warning(("Optimization Warning: "
             "Got the following error, but you can ignore it. "
             "This could cause less GpuElemwise fused together.\n"
@@ -1914,6 +1955,7 @@ gpu_inplace_elemwise_optimizer = tensor.opt.inplace_elemwise_optimizer_op(
 # It still will be run in fast_run with device=gpu with the current tag.
 optdb.register('gpu_inplace_elemwise_opt', gpu_inplace_elemwise_optimizer, 75,
                'fast_run', 'inplace', 'gpu_inplace')
+
 
 register_opt()(tensor.opt.local_remove_useless_assert)
 
@@ -2249,6 +2291,15 @@ def gpuScanOptimization(node):
             return outputs
     return False
 
+
+@register_opt()
+@local_optimizer([tensor.AllocEmpty, gpu_from_host])
+def local_gpu_allocempty(node):
+    if (isinstance(node.op, tensor.AllocEmpty) and
+        node.op.dtype=="float32"):
+        return [host_from_gpu(GpuAllocEmpty()(*node.inputs))]
+    return False
+        
 
 optdb.register('gpu_scanOp_make_inplace',
                scan_opt.ScanInplaceOptimizer(typeConstructor=typeConstructor,

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.plugins.skip import SkipTest
 import numpy
 import unittest
@@ -148,17 +149,17 @@ def test_GpuCrossentropySoftmax1HotWithBiasDx():
         scaled_err = numpy.minimum(abs_err / atol, rel_err / rtol)
         max_i = scaled_err.argmax()
 
-        print 'max err index:', max_i, max_i / batch_size,
-        print  max_i % batch_size, max_i / n_out, max_i & n_out
-        print 'At that index:'
-        print 'err:', scaled_err.flatten()[max_i]
-        print 'absolute error:', abs_err.flatten()[max_i]
-        print 'relative error:', rel_err.flatten()[max_i]
-        print 'cpu_out:', cpu_out.flatten()[max_i]
-        print 'gpu_out:', gpu_out.flatten()[max_i]
-        print 'softmax_output_value:', softmax_output_value.flatten()[max_i]
-        print 'dnll_value:', dnll_value[max_i / n_out]
-        print 'y_idx_value:', y_idx_value[max_i / n_out]
+        print('max err index:', max_i, max_i / batch_size, end=' ')
+        print(max_i % batch_size, max_i / n_out, max_i & n_out)
+        print('At that index:')
+        print('err:', scaled_err.flatten()[max_i])
+        print('absolute error:', abs_err.flatten()[max_i])
+        print('relative error:', rel_err.flatten()[max_i])
+        print('cpu_out:', cpu_out.flatten()[max_i])
+        print('gpu_out:', gpu_out.flatten()[max_i])
+        print('softmax_output_value:', softmax_output_value.flatten()[max_i])
+        print('dnll_value:', dnll_value[max_i / n_out])
+        print('y_idx_value:', y_idx_value[max_i / n_out])
 
         assert False, "numpy.allclose(cpu_out, gpu_out, rtol=%s, atol=%s)" % (
                 rtol, atol)
@@ -416,7 +417,7 @@ class test_SoftMax(unittest.TestCase):
         # Verify that the SoftmaxGrad -> GpuDnnSoftmaxGrad optimization is not
         # applied when cudnn is excluded or not available
         mode_wo_cudnn = mode_with_gpu.excluding("cudnn")
-        y = T.vector('y')
+        y = T.fvector('y')
         f = theano.function(
             [y],
             T.grad(T.nnet.softmax(y).mean(), y),
@@ -435,3 +436,22 @@ class test_SoftMax(unittest.TestCase):
                         i.op,
                         theano.tensor.nnet.SoftmaxGrad
                     )]) == 1)
+
+        # Verify that the SoftmaxGrad -> GpuDnnSoftmaxGrad do not
+        # crash with manual graph
+        y = T.fvector('y')
+        o = theano.tensor.nnet.SoftmaxGrad()(y, y*2)
+        f = theano.function([y], o, mode=mode_with_gpu)
+        sorted_f = f.maker.fgraph.toposort()
+        assert(len([i
+                    for i in sorted_f
+                    if isinstance(
+                        i.op,
+                        theano.sandbox.cuda.dnn.GpuDnnSoftmaxGrad
+                    )]) == 1)
+        assert(len([i
+                    for i in sorted_f
+                    if isinstance(
+                        i.op,
+                        theano.tensor.nnet.SoftmaxGrad
+                    )]) == 0)

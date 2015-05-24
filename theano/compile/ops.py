@@ -215,6 +215,8 @@ class Shape(gof.Op):
 
     @note: Non-differentiable.
     """
+    _f16_ok = True
+
     # Mapping from Type to C code (and version) to use.
     # In the C code, the name of the input variable is %(iname)s,
     # the output variable is %(oname)s.
@@ -308,6 +310,8 @@ class Shape_i(gof.Op):
 
     @note: Non-differentiable.
     """
+    _f16_ok = True
+
     # Mapping from Type to C code (and version) to use.
     # In the C code, the name of the input variable is %(iname)s,
     # the output variable is %(oname)s.
@@ -598,6 +602,7 @@ class Rebroadcast(gof.Op):
     ..note: works inplace and works for CudaNdarrayType
     """
     view_map = {0: [0]}
+    _f16_ok = True
     # Mapping from Type to C code (and version) to use.
     # In the C code, the name of the input variable is %(iname)s,
     # the output variable is %(oname)s.

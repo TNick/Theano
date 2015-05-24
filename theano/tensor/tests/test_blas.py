@@ -1,3 +1,4 @@
+from __future__ import print_function
 from copy import copy
 from unittest import TestCase
 
@@ -102,7 +103,7 @@ class t_gemm(TestCase):
         Gemm.debug = True
         try:
             g = gemm_inplace([1.], 1., [1.], [1.], 1.)
-        except TypeError, e:
+        except TypeError as e:
             if exc_message(e) is Gemm.E_rank:
                 return
         self.fail()
@@ -110,7 +111,7 @@ class t_gemm(TestCase):
     def test0(self):
         try:
             self.cmp(1., 0., 1.0, 1.0, 1.0)
-        except TypeError, e:
+        except TypeError as e:
             if exc_message(e) is Gemm.E_rank:
                 return
         self.fail()
@@ -118,7 +119,7 @@ class t_gemm(TestCase):
     def test2(self):
         try:
             self.cmp(2., 1.0, [3, 2, 1.], [[1], [2], [3.]], 1.0)
-        except TypeError, e:
+        except TypeError as e:
             self.assertTrue(exc_message(e) == Gemm.E_rank)
             return
         self.fail()
@@ -209,7 +210,7 @@ class t_gemm(TestCase):
         Z = as_tensor_variable(self.rand(2, 2))
         try:
             gemm_inplace(Z, 1.0, Z, Z, 1.0)
-        except InconsistencyError, e:
+        except InconsistencyError as e:
             if exc_message(e) == Gemm.E_z_uniq:
                 return
         self.fail()
@@ -220,7 +221,7 @@ class t_gemm(TestCase):
         A = as_tensor_variable(self.rand(2, 2))
         try:
             gemm_inplace(Z, 1.0, A, inplace.transpose_inplace(Z), 1.0)
-        except InconsistencyError, e:
+        except InconsistencyError as e:
             if exc_message(e) == Gemm.E_z_uniq:
                 return
         self.fail()
@@ -231,7 +232,7 @@ class t_gemm(TestCase):
         A = as_tensor_variable(self.rand(2, 2))
         try:
             gemm_inplace(Z, 1.0, inplace.transpose_inplace(Z), A, 1.0)
-        except InconsistencyError, e:
+        except InconsistencyError as e:
             if exc_message(e) == Gemm.E_z_uniq:
                 return
         self.fail()
@@ -242,7 +243,7 @@ class t_gemm(TestCase):
         A = as_tensor_variable(self.rand(2, 2))
         try:
             gemm_inplace(Z, 1.0, Z, A, 1.0)
-        except InconsistencyError, e:
+        except InconsistencyError as e:
             if exc_message(e) == Gemm.E_z_uniq:
                 return
         self.fail()
@@ -311,7 +312,7 @@ class t_gemm(TestCase):
 
         try:
             t(C.T, A[:2, :], B[:, :2].T)
-        except ValueError, e:
+        except ValueError as e:
             if exc_message(e).find('aligned') >= 0:
                 return
         self.fail()
@@ -431,7 +432,7 @@ class T_real_matrix(TestCase):
 
 
 def fail(msg):
-    print 'FAIL', msg
+    print('FAIL', msg)
     assert False
 
 
@@ -493,7 +494,7 @@ def just_gemm(i, o, ishapes=[(4, 3), (3, 5), (4, 5), (), ()],
                           max_abs_err)
     except Failure:
         for node in f.maker.fgraph.toposort():
-            print 'GRAPH', node
+            print('GRAPH', node)
         raise
 
 
@@ -568,7 +569,7 @@ def test_gemm_opt_double_gemm():
                 max_abs_err)
     except Failure:
         for node in f.maker.fgraph.toposort():
-            print 'GRAPH', node
+            print('GRAPH', node)
         raise
 
 
@@ -805,7 +806,7 @@ def test_inplace0():
     f = inplace_func([Z, b, R, S],
             [Z * (Z + b * T.dot(R, S).T)], mode='FAST_RUN')
     if (gemm_inplace in [n.op for n in f.maker.fgraph.apply_nodes]):
-        print pp(f.maker.fgraph.outputs[0])
+        print(pp(f.maker.fgraph.outputs[0]))
         raise Failure('gemm_inplace in graph')
     assert gemm_no_inplace in [n.op for n in f.maker.fgraph.apply_nodes]
 
@@ -874,28 +875,32 @@ def test_dot22scalar():
                     cst = theano.tensor.basic.constant(.2, dtype=dtype4)
                     cst2 = theano.tensor.basic.constant(.1, dtype=dtype4)
 
-                    def check_dot22scalar(func, len_topo_scalar=-1):
+                    def check_dot22scalar_gemm(func, len_topo_scalar=-1):
                         topo = func.maker.fgraph.toposort()
                         ops = [x.op for x in topo]
+                        classes = [type(x.op) for x in topo]
                         dtype4_upcast = theano.scalar.upcast(dtype4, dtype1,
                                                              dtype2)
+
                         if dtype1 == dtype2 == dtype3 == dtype4_upcast:
                             if len_topo_scalar > 0:
                                 assert len(topo) == len_topo_scalar
-                            assert _dot22scalar in ops, (dtype1, dtype2,
+                            assert gemm_inplace in ops, (dtype1, dtype2,
                                                          dtype3, dtype4)
                         elif dtype1 == dtype2 == dtype4_upcast:
                             if not (len_topo_scalar > 0):
                                 assert len(topo) == len_topo_scalar
-                                assert _dot22scalar in ops, (dtype1, dtype2,
+                                assert gemm_inplace in ops, (dtype1, dtype2,
                                                              dtype3, dtype4)
+                                assert not T.Elemwise in classes, (
+                                    dtype1, dtype2, dtype3, dtype4)
                             else:
                                 # Currently there is a problem of
                                 # optimization order The constant get
                                 # upcasted to float64 before we try to
                                 # merge it with the dot22 of
                                 # float32. So this prevent the merge.
-                                assert _dot22scalar in ops or _dot22 in ops, (
+                                assert gemm_inplace in ops or _dot22 in ops, (
                                     dtype1, dtype2, dtype3, dtype4)
 
                         elif dtype1 == dtype2:
@@ -915,7 +920,7 @@ def test_dot22scalar():
                             f = theano.function([a, b], cst * T.dot(a, b),
                                                 mode=mode_blas_opt)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 1)
+                            check_dot22scalar_gemm(f, 1)
 
                             f(av, bv)
 
@@ -924,7 +929,8 @@ def test_dot22scalar():
                                                 cst * c * T.dot(a, b),
                                                 mode=mode_blas_opt)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar_gemm(f, 5)
+                            #print (av.dtype, bv.dtype, cv.dtype)
 
                             f(av, bv, cv)
 
@@ -932,7 +938,7 @@ def test_dot22scalar():
                                             c * cst * T.dot(a, b),
                                             mode=mode_blas_opt)
                         topo = f.maker.fgraph.toposort()
-                        check_dot22scalar(f, 2)
+                        check_dot22scalar_gemm(f, 5)
                         f(av, bv, cv)
 
                         # Here, canonicalize also seems needed
@@ -942,7 +948,7 @@ def test_dot22scalar():
                                             cst2 * c * cst * T.dot(a, b),
                                             mode=m2)
                         topo = f.maker.fgraph.toposort()
-                        check_dot22scalar(f, 2)
+                        check_dot22scalar_gemm(f, 5)
                         f(av, bv, cv)
 
                         if dtype1 == dtype2 == dtype3:
@@ -950,7 +956,7 @@ def test_dot22scalar():
                                                 c * cst * a * T.dot(a, b),
                                                 mode=m2)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar_gemm(f, 5)
                             f(sv, sv, sv)
 
                             f = theano.function([a, b, c],
@@ -973,7 +979,7 @@ def test_dot22scalar():
                                                 c * a * cst * T.dot(a, b),
                                                 mode=m2)
                             topo = f.maker.fgraph.toposort()
-                            check_dot22scalar(f, 2)
+                            check_dot22scalar_gemm(f, 5)
                             f(sv, sv, sv)
 
                     cmp((3, 4), (4, 5), (3, 5))
@@ -993,7 +999,7 @@ def test_dot22scalar_cast():
     for scalar_int_type in T.int_dtypes:
         y = T.scalar(dtype=scalar_int_type)
         f = theano.function([A, y], T.dot(A, A) * y, mode=mode_blas_opt)
-        assert _dot22scalar in [x.op for x in f.maker.fgraph.toposort()]
+        assert gemm_inplace in [x.op for x in f.maker.fgraph.toposort()]
     A = T.fmatrix()
     for scalar_int_type in T.int_dtypes:
         y = T.scalar(dtype=scalar_int_type)
@@ -1001,7 +1007,7 @@ def test_dot22scalar_cast():
         if scalar_int_type in ['int32', 'int64']:
             assert _dot22 in [x.op for x in f.maker.fgraph.toposort()]
         else:
-            assert _dot22scalar in [x.op for x in f.maker.fgraph.toposort()]
+            assert gemm_inplace in [x.op for x in f.maker.fgraph.toposort()]
 
 
 def test_local_dot22_to_dot22scalar():

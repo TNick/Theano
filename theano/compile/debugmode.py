@@ -3,6 +3,8 @@
 :TODO: add support for IfElse Op, LazyLinker, PureOp, etc.
 
 """
+from __future__ import print_function
+
 __docformat__ = "restructuredtext en"
 
 import copy, sys, copy_reg, gc
@@ -166,24 +168,24 @@ class BadThunkOutput(DebugModeError):
         """Return a pretty multiline string representating the cause
         of the exception"""
         sio = StringIO()
-        print >> sio, "BadThunkOutput"
-        print >> sio, "  Apply   :", self.r.owner
-        print >> sio, "  op      :", self.offending_op()
-        print >> sio, "  Outputs Type:", self.r.type
-        print >> sio, "  Outputs Shape:", getattr(self.val1, 'shape', None)
-        print >> sio, "  Outputs Strides:", getattr(self.val1, 'strides', None)
-        print >> sio, "  Inputs Type :", [i.type for i in self.r.owner.inputs]
-        print >> sio, "  Inputs Shape:", [getattr(val, 'shape', None)
-                                          for val in self.inputs_val]
-        print >> sio, "  Inputs Strides:", [getattr(val, 'strides', None)
-                                            for val in self.inputs_val]
-        print >> sio, "  Bad Variable:", self.r
-        print >> sio, "  thunk1  :", self.thunk1
-        print >> sio, "  thunk2  :", self.thunk2
+        print("BadThunkOutput", file=sio)
+        print("  Apply   :", self.r.owner, file=sio)
+        print("  op      :", self.offending_op(), file=sio)
+        print("  Outputs Type:", self.r.type, file=sio)
+        print("  Outputs Shape:", getattr(self.val1, 'shape', None), file=sio)
+        print("  Outputs Strides:", getattr(self.val1, 'strides', None), file=sio)
+        print("  Inputs Type :", [i.type for i in self.r.owner.inputs], file=sio)
+        print("  Inputs Shape:", [getattr(val, 'shape', None)
+                                          for val in self.inputs_val], file=sio)
+        print("  Inputs Strides:", [getattr(val, 'strides', None)
+                                            for val in self.inputs_val], file=sio)
+        print("  Bad Variable:", self.r, file=sio)
+        print("  thunk1  :", self.thunk1, file=sio)
+        print("  thunk2  :", self.thunk2, file=sio)
 
         # Don't import it at the top of the file to prevent circular import.
         utt = theano.tests.unittest_tools
-        print >> sio, utt.str_diagnostic(self.val1, self.val2, None, None)
+        print(utt.str_diagnostic(self.val1, self.val2, None, None), file=sio)
         ret = sio.getvalue()
         return ret
 
@@ -241,58 +243,62 @@ class BadOptimization(DebugModeError):
         of the exception"""
         sio = StringIO()
         val_str_len_limit = 800
-        print >> sio, "BadOptimization Error", super(BadOptimization,
-                                                     self).__str__()
-        print >> sio, "  Variable: id", id(self.new_r), self.new_r
-        print >> sio, "  Op", self.new_r.owner
-        print >> sio, "  Value Type:", type(self.new_r_val)
+        print("BadOptimization Error", super(BadOptimization,
+                                                     self).__str__(), file=sio)
+        print("  Variable: id", id(self.new_r), self.new_r, file=sio)
+        print("  Op", self.new_r.owner, file=sio)
+        print("  Value Type:", type(self.new_r_val), file=sio)
         try:
             ssio = StringIO()
-            print >> ssio, "  Old Value shape, dtype, strides:",
-            print >> ssio, self.old_r_val.shape,
-            print >> ssio, self.old_r_val.dtype,
-            print >> ssio, self.old_r_val.strides
+            print("  Old Value shape, dtype, strides:", end=' ', file=ssio)
+            print(self.old_r_val.shape, end=' ', file=ssio)
+            print(self.old_r_val.dtype, end=' ', file=ssio)
+            print(self.old_r_val.strides, file=ssio)
             # only if all succeeds to we add anything to sio
-            print >> sio, ssio.getvalue()
+            print(ssio.getvalue(), file=sio)
         except Exception:
             pass
 
         str_old_r_val = str(self.old_r_val)
         if len(str_old_r_val) > val_str_len_limit:
-            print >> sio, "  Old Value: ", str(self.old_r_val)[
-                :val_str_len_limit], '...'
+            print("  Old Value: ", str(self.old_r_val)[
+                :val_str_len_limit], '...', file=sio)
         else:
-            print >> sio, "  Old Value: ", str(self.old_r_val)
+            print("  Old Value: ", str(self.old_r_val), file=sio)
 
         try:
             ssio = StringIO()
-            print >> ssio, "  New Value shape, dtype, strides:",
-            print >> ssio, self.new_r_val.shape,
-            print >> ssio, self.new_r_val.dtype,
-            print >> ssio, self.new_r_val.strides
+            print("  New Value shape, dtype, strides:", end=' ', file=ssio)
+            print(self.new_r_val.shape, end=' ', file=ssio)
+            print(self.new_r_val.dtype, end=' ', file=ssio)
+            print(self.new_r_val.strides, file=ssio)
             # only if all succeeds to we add anything to sio
-            print >> sio, ssio.getvalue()
+            print(ssio.getvalue(), file=sio)
         except Exception:
             pass
         str_new_r_val = str(self.new_r_val)
         if len(str_new_r_val) > val_str_len_limit:
-            print >> sio, "  New Value: ", str(self.new_r_val)[
-                :val_str_len_limit], '...'
+            print("  New Value: ", str(self.new_r_val)[
+                :val_str_len_limit], '...', file=sio)
         else:
-            print >> sio, "  New Value: ", str(self.new_r_val)
+            print("  New Value: ", str(self.new_r_val), file=sio)
 
         try:
             ov = numpy.asarray(self.old_r_val)
             nv = numpy.asarray(self.new_r_val)
             ssio = StringIO()
-            print >> ssio, "  Max Abs Diff: ", numpy.max(numpy.absolute(nv -
-                                                                        ov))
-            print >> ssio, "  Mean Abs Diff: ", numpy.mean(numpy.absolute(nv -
-                                                                          ov))
-            print >> ssio, "  Median Abs Diff: ", numpy.median(numpy.absolute(
-                    nv - ov))
-            print >> ssio, "  Std Abs Diff: ", numpy.std(numpy.absolute(
-                    nv - ov))
+            print("  Max Abs Diff: ", numpy.max(numpy.absolute(nv -
+                                                                        ov)), file=ssio)
+            print("  Mean Abs Diff: ", numpy.mean(numpy.absolute(nv -
+                                                                          ov)), file=ssio)
+            print("  Median Abs Diff: ", numpy.median(numpy.absolute(
+                    nv - ov)), file=ssio)
+            print("  Std Abs Diff: ", numpy.std(numpy.absolute(
+                    nv - ov)), file=ssio)
+            arg_max_val = numpy.argmax(numpy.absolute(nv - ov))
+            values_at_max = (nv.flatten()[arg_max_val],
+                             ov.flatten()[arg_max_val])
+            print("  Value at Max Diff: ", values_at_max, file=ssio)
 
             # N.B. the maximum(..., 1e-8) protects against div by 0 when
             #      nv == ov == 0
@@ -300,23 +306,27 @@ class BadOptimization(DebugModeError):
                     / numpy.maximum(
                         numpy.absolute(nv) + numpy.absolute(ov),
                         1e-8))
-            print >> ssio, "  Max Rel Diff: ", numpy.max(reldiff)
-            print >> ssio, "  Mean Rel Diff: ", numpy.mean(reldiff)
-            print >> ssio, "  Median Rel Diff: ", numpy.median(reldiff)
-            print >> ssio, "  Std Rel Diff: ", numpy.std(reldiff)
+            print("  Max Rel Diff: ", numpy.max(reldiff), file=ssio)
+            print("  Mean Rel Diff: ", numpy.mean(reldiff), file=ssio)
+            print("  Median Rel Diff: ", numpy.median(reldiff), file=ssio)
+            print("  Std Rel Diff: ", numpy.std(reldiff), file=ssio)
+            arg_max_val = numpy.argmax(reldiff)
+            values_at_max = (nv.flatten()[arg_max_val],
+                             ov.flatten()[arg_max_val])
+            print("  Value at Max Diff: ", values_at_max, file=ssio)
             # only if all succeeds to we add anything to sio
-            print >> sio, ssio.getvalue()
+            print(ssio.getvalue(), file=sio)
         except Exception:
             pass
 
-        print >> sio, "  Reason: ", str(self.reason)
-        print >> sio, "  Old Graph:"
-        print >> sio, self.old_graph
-        print >> sio, "  New Graph:"
-        print >> sio, self.new_graph
-        print >> sio, ""
-        print >> sio, "Hint: relax the tolerance by setting tensor.cmp_sloppy=1"
-        print >> sio, "  or even tensor.cmp_sloppy=2 for less-strict comparison"
+        print("  Reason: ", str(self.reason), file=sio)
+        print("  Old Graph:", file=sio)
+        print(self.old_graph, file=sio)
+        print("  New Graph:", file=sio)
+        print(self.new_graph, file=sio)
+        print("", file=sio)
+        print("Hint: relax the tolerance by setting tensor.cmp_sloppy=1", file=sio)
+        print("  or even tensor.cmp_sloppy=2 for less-strict comparison", file=sio)
         return sio.getvalue()
 
 
@@ -334,33 +344,33 @@ class BadDestroyMap(DebugModeError):
 
     def __str__(self):
         sio = StringIO()
-        print >> sio, "  node:", self.node
-        print >> sio, "  perform:", self.perform
-        print >> sio, "  node.inputs:", [(str(i), id(i))
-                                         for i in self.node.inputs]
-        print >> sio, "  destroy_map:", getattr(self.node.op,
-                                                'destroy_map', {})
-        print >> sio, "  changed input idx:", self.idx
-        print >> sio, "  changed input type:", self.node.inputs[self.idx].type
-        print >> sio, "  repr (old val):", repr(self.old_val)
-        print >> sio, "  repr (new val):", repr(self.new_val)
+        print("  node:", self.node, file=sio)
+        print("  perform:", self.perform, file=sio)
+        print("  node.inputs:", [(str(i), id(i))
+                                         for i in self.node.inputs], file=sio)
+        print("  destroy_map:", getattr(self.node.op,
+                                                'destroy_map', {}), file=sio)
+        print("  changed input idx:", self.idx, file=sio)
+        print("  changed input type:", self.node.inputs[self.idx].type, file=sio)
+        print("  repr (old val):", repr(self.old_val), file=sio)
+        print("  repr (new val):", repr(self.new_val), file=sio)
         try:
             npy_old_val = numpy.asarray(self.old_val)
             npy_new_val = numpy.asarray(self.new_val)
-            print >> sio, "  value dtype (new <space> old):", npy_new_val.dtype, npy_old_val.dtype
-            print >> sio, "  value shape (new <space> old):", npy_new_val.shape, npy_old_val.shape
-            print >> sio, "  value min (new <space> old):", npy_new_val.min(), npy_old_val.min()
-            print >> sio, "  value max (new <space> old):", npy_new_val.max(), npy_old_val.max()
+            print("  value dtype (new <space> old):", npy_new_val.dtype, npy_old_val.dtype, file=sio)
+            print("  value shape (new <space> old):", npy_new_val.shape, npy_old_val.shape, file=sio)
+            print("  value min (new <space> old):", npy_new_val.min(), npy_old_val.min(), file=sio)
+            print("  value max (new <space> old):", npy_new_val.max(), npy_old_val.max(), file=sio)
             delta = npy_new_val - npy_old_val
-            print >> sio, "  value min (new-old):", delta.min()
-            print >> sio, "  value max (new-old):", delta.max()
-            print >> sio, "  value argmin (new-old):", numpy.unravel_index(delta.argmin(), npy_new_val.shape)
-            print >> sio, "  value argmax (new-old):", numpy.unravel_index(delta.argmax(), npy_new_val.shape)
-            print >> sio, "  location of first 10 mismatches:", numpy.transpose(numpy.nonzero(delta))[:10]
-            print >> sio, ""
-        except Exception, e:
-            print >> sio, "(Numpy-hints failed with: %s)" % str(e)
-        print >> sio, "  Hint: this can also be caused by a deficient values_eq_approx() or __eq__() implementation [which compared input values]"
+            print("  value min (new-old):", delta.min(), file=sio)
+            print("  value max (new-old):", delta.max(), file=sio)
+            print("  value argmin (new-old):", numpy.unravel_index(delta.argmin(), npy_new_val.shape), file=sio)
+            print("  value argmax (new-old):", numpy.unravel_index(delta.argmax(), npy_new_val.shape), file=sio)
+            print("  location of first 10 mismatches:", numpy.transpose(numpy.nonzero(delta))[:10], file=sio)
+            print("", file=sio)
+        except Exception as e:
+            print("(Numpy-hints failed with: %s)" % str(e), file=sio)
+        print("  Hint: this can also be caused by a deficient values_eq_approx() or __eq__() implementation [which compared input values]", file=sio)
         return sio.getvalue()
 
 
@@ -379,20 +389,20 @@ class BadViewMap(DebugModeError):
 
     def __str__(self):
         sio = StringIO()
-        print >> sio, "  node:", self.node
-        print >> sio, "  node.inputs:", [(str(i), id(i))
-                                         for i in self.node.inputs]
-        print >> sio, "  node.outputs:", [(str(i), id(i))
-                                          for i in self.node.outputs]
-        print >> sio, "  view_map:", getattr(self.node.op, 'view_map', {})
-        print >> sio, "  destroy_map:", getattr(self.node.op,
-                                                'destroy_map', {})
-        print >> sio, "  aliased output:", self.output_idx
-        print >> sio, "  aliased output storage:", self.out_storage
+        print("  node:", self.node, file=sio)
+        print("  node.inputs:", [(str(i), id(i))
+                                         for i in self.node.inputs], file=sio)
+        print("  node.outputs:", [(str(i), id(i))
+                                          for i in self.node.outputs], file=sio)
+        print("  view_map:", getattr(self.node.op, 'view_map', {}), file=sio)
+        print("  destroy_map:", getattr(self.node.op,
+                                                'destroy_map', {}), file=sio)
+        print("  aliased output:", self.output_idx, file=sio)
+        print("  aliased output storage:", self.out_storage, file=sio)
         if self.in_alias_idx:
-            print >> sio, "  aliased to inputs:", self.in_alias_idx
+            print("  aliased to inputs:", self.in_alias_idx, file=sio)
         if self.out_alias_idx:
-            print >> sio, "  aliased to outputs:", self.out_alias_idx
+            print("  aliased to outputs:", self.out_alias_idx, file=sio)
         return sio.getvalue()
 
 
@@ -584,30 +594,30 @@ def debugprint(r, prefix='', depth=-1, done=None, print_type=False,
 
         if profile == None or a not in profile.apply_time:
             if len(a.outputs) == 1:
-                print >> file, '%s%s %s%s \'%s\' %s %s %s' % (prefix, a.op,
+                print('%s%s %s%s \'%s\' %s %s %s' % (prefix, a.op,
                                                               id_str,
                                                               type_str,
                                                               r_name,
                                                               destroy_map_str,
                                                               view_map_str,
-                                                              o)
+                                                              o), file=file)
             else:
-                print >> file, '%s%s.%i %s%s \'%s\' %s %s %s' % (prefix, a.op,
+                print('%s%s.%i %s%s \'%s\' %s %s %s' % (prefix, a.op,
                                                                  a.outputs.index(r),
                                                                  id_str, type_str,
                                                                  r_name,
                                                                  destroy_map_str,
                                                                  view_map_str,
-                                                                 o)
+                                                                 o), file=file)
         else:
             op_time = profile.apply_time[a]
             op_time_percent = (op_time / profile.fct_call_time) * 100
             tot_time_dict = profile.compute_total_times()
             tot_time = tot_time_dict[a]
             tot_time_percent = (tot_time_dict[a] / profile.fct_call_time) * 100
-     
+
             if len(a.outputs) == 1:
-                print >> file, '%s%s %s%s \'%s\' %s %s %s --> %8.2es %4.1f%% %8.2es %4.1f%%'\
+                print('%s%s %s%s \'%s\' %s %s %s --> %8.2es %4.1f%% %8.2es %4.1f%%'\
                     % (prefix, a.op,
                        id_str,
                        type_str,
@@ -617,9 +627,9 @@ def debugprint(r, prefix='', depth=-1, done=None, print_type=False,
                        o, op_time,
                        op_time_percent,
                        tot_time,
-                       tot_time_percent)
+                       tot_time_percent), file=file)
             else:
-                print >> file, '%s%s.%i %s%s \'%s\' %s %s %s --> %8.2es %4.1f%% %8.2es %4.1f%%'\
+                print('%s%s.%i %s%s \'%s\' %s %s %s --> %8.2es %4.1f%% %8.2es %4.1f%%'\
                     % (prefix, a.op,
                        a.outputs.index(r),
                        id_str, type_str,
@@ -629,7 +639,7 @@ def debugprint(r, prefix='', depth=-1, done=None, print_type=False,
                        o, op_time,
                        op_time_percent,
                        tot_time,
-                       tot_time_percent)
+                       tot_time_percent), file=file)
 
         if not already_printed:
             if (not stop_on_name or
@@ -654,7 +664,7 @@ def debugprint(r, prefix='', depth=-1, done=None, print_type=False,
     else:
         # this is an input variable
         id_str = get_id_str(r)
-        print >> file, '%s%s %s%s' % (prefix, r, id_str, type_str)
+        print('%s%s %s%s' % (prefix, r, id_str, type_str), file=file)
 
     return file
 
@@ -902,7 +912,7 @@ def _check_strides_match(a, b, warn_err, op):
         if warn_err == 2:
             raise e
         else:
-            print >> sys.stderr, 'WARNING:', e
+            print('WARNING:', e, file=sys.stderr)
 
 
 def _lessbroken_deepcopy(a):
@@ -1015,7 +1025,7 @@ def _find_bad_optimizations1(order, reasons, r_vals):
                 if equivalence_sets_broken[id(r_equiv)]:
                     first_broken_set = r_equiv
         # TODO finish this to produce good diagnostic information
-        print first_broken_set
+        print(first_broken_set)
         raise Exception('broken')
 
 
@@ -1559,10 +1569,13 @@ class _VariableEquivalenceTracker(object):
         if append_reason:
             # N.B. compute the debugprint now, because future
             # optimizations will change the graph
+            done = dict()
             self.reasons[new_r].append((reason,
                 r,
-                debugprint(r, prefix='  ', depth=6, file=StringIO()).getvalue(),
-                debugprint(new_r, prefix='  ',  depth=6, file=StringIO()).getvalue()))
+                debugprint(r, prefix='  ', depth=6,
+                           file=StringIO(), done=done).getvalue(),
+                debugprint(new_r, prefix='  ',  depth=6,
+                           file=StringIO(), done=done).getvalue()))
             self.replaced_by[r].append((reason, new_r))
 
         if r in self.equiv:
@@ -1592,9 +1605,9 @@ class _VariableEquivalenceTracker(object):
 
     def printstuff(self):
         for key in self.equiv:
-            print key
+            print(key)
             for e in self.equiv[key]:
-                print '  ', e
+                print('  ', e)
 
 
 # List of default version of make thunk.
@@ -1672,16 +1685,18 @@ class _Linker(gof.link.LocalLinker):
             node_input_storage = [storage_map[r] for r in node.inputs]
             node_output_storage = [storage_map[r] for r in node.outputs]
 
+            compute_map = {}
+            for k in node.inputs:
+                compute_map[k] = [True]
+            for k in node.outputs:
+                compute_map[k] = [False]
+
             # Some Ops define a make_thunk with the expectation that
             # it will be called before the C code is compiled, because
             # the compilation of some dependency is triggered there.
             thunk_other = None
+
             if get_unbound_function(node.op.make_thunk) not in default_make_thunk:
-                compute_map = {}
-                for k in node.inputs:
-                    compute_map[k] = [True]
-                for k in node.outputs:
-                    compute_map[k] = [False]
                 thunk = node.op.make_thunk(node,
                                            storage_map,
                                            compute_map,
@@ -1695,24 +1710,13 @@ class _Linker(gof.link.LocalLinker):
                     raise utils.MethodNotDefined()
                 # Ops that do not inherit from gof.op.Op don't have certain
                 # methods defined that the CLinker expects (Scan is an
-                # exmaple, ifelse is another of such classes that inherit
+                # example, ifelse is another of such classes that inherit
                 # directly from PureOp)
                 if not isinstance(node.op, gof.op.Op):
                     raise utils.MethodNotDefined()
-                e = FunctionGraph(node.inputs, node.outputs)
-                # The toposort isn't a stochastic order as it contain only one node.
-                e.toposort = lambda: list(e.apply_nodes)
-                #  Specifically... e.nodes is a set, but of only 1 element
 
-                cl = CLinker().accept(e, [r for r, r2 in zip(e.outputs,
-                                                             node.outputs)
-                                          if r2 in no_recycling])
-
-                thunk, node_input_filters, node_output_filters = cl.make_thunk(
-                    input_storage=node_input_storage,
-                    output_storage=node_output_storage)
-                thunk.inputs = node_input_storage
-                thunk.outputs = node_output_storage
+                thunk = node.op.make_c_thunk(node, storage_map, compute_map,
+                                             no_recycling)
                 thunks_c.append(thunk)
             except (NotImplementedError, utils.MethodNotDefined):
                 thunks_c.append(None)
@@ -1722,20 +1726,8 @@ class _Linker(gof.link.LocalLinker):
             # consider that we don't have a python implementation
             if ((self.maker.mode.check_py_code or thunks_c[-1] is None) and
                 node.op.perform.func_code != gof.op.PureOp.perform.func_code):
-                p = node.op.perform
-                ctx = node.run_context()
-                if ctx is graph.NoContext:
-                    thunk = (lambda p=p, i=node_input_storage,
-                             o=node_output_storage,
-                             n=node: p(n, [x[0] for x in i], o))
-                else:
-                    ctx_val = node.context_type.filter(ctx)
-                    thunk = (lambda p=p, i=node_input_storage,
-                             o=node_output_storage, ctx=ctx_val,
-                             n=node: p(n, [x[0] for x in i], o, ctx))
-                thunk.inputs = node_input_storage
-                thunk.outputs = node_output_storage
-                thunk.perform = p
+                thunk = node.op.make_py_thunk(node, storage_map, compute_map,
+                                              no_recycling)
                 thunks_py.append(thunk)
             else:
                 thunks_py.append(None)
@@ -1835,7 +1827,7 @@ class _Linker(gof.link.LocalLinker):
                 #####
                 for r, s in storage_map.iteritems():
                     if s[0] is not None:
-                        print r, s
+                        print(r, s)
                     assert s[0] is None
 
                 # try:
@@ -1869,7 +1861,7 @@ class _Linker(gof.link.LocalLinker):
                             # shouldn't have put it into the list in
                             # the first place
                             thunk_py = None
-                        except Exception, e:
+                        except Exception as e:
                             # I think that only 1 optimization can
                             # insert a given apply node. If that is not True,
                             # we would need to loop over all node outputs,
@@ -1966,7 +1958,7 @@ class _Linker(gof.link.LocalLinker):
                         # First time, with None in output_storage
                         try:
                             thunk_c()
-                        except Exception, e:
+                        except Exception as e:
                             # I think that only 1 optimization can
                             # insert a given apply node. If that is not True,
                             # we would need to loop over all node outputs,
@@ -2191,8 +2183,8 @@ class _Maker(FunctionMaker):  # inheritance buys a few helper functions
         not used in the graph. Possible values are 'raise', 'warn', and 'ignore'.
 
         :param output_keys: If the outputs argument for theano.function was a
-        list, then output_keys is None.  If the outputs argument was a dict, 
-        then output_keys is a sorted list of the keys from that dict.  
+        list, then output_keys is None.  If the outputs argument was a dict,
+        then output_keys is a sorted list of the keys from that dict.
 
         :note: this function sets TensorType.filter_checks_isfinite
         when `mode.check_isfinite` is True
@@ -2247,21 +2239,21 @@ class _Maker(FunctionMaker):  # inheritance buys a few helper functions
                 l0 = fgraph0.equivalence_tracker.event_list
                 if li != l0 :
                     infolog = StringIO()
-                    print >> infolog, "WARNING: Optimization process is unstable..."
-                    print >> infolog, "  (HINT: Ops that the nodes point to must compare equal)"
-                    print >> infolog, "(event index)  (one event trace)  (other event trace)"
-                    print >> infolog, "-----------------------------------------------------"
+                    print("WARNING: Optimization process is unstable...", file=infolog)
+                    print("  (HINT: Ops that the nodes point to must compare equal)", file=infolog)
+                    print("(event index)  (one event trace)  (other event trace)", file=infolog)
+                    print("-----------------------------------------------------", file=infolog)
                     for j in xrange(max(len(li), len(l0))):
                         if j >= len(li):
-                            print >> infolog, 'trailing event in optimization 0 :', j
-                            print >> infolog, '   ', str(l0[j])
+                            print('trailing event in optimization 0 :', j, file=infolog)
+                            print('   ', str(l0[j]), file=infolog)
                         elif j >= len(l0):
-                            print >> infolog, 'trailing event in optimization', i, ':', j
-                            print >> infolog, '   ', str(li[j])
+                            print('trailing event in optimization', i, ':', j, file=infolog)
+                            print('   ', str(li[j]), file=infolog)
                         elif li[j] != l0[j]:
-                            print >>infolog, 'non-equal optimization events', i, ':', j
-                            print >>infolog, '   ', str(l0[j])
-                            print >>infolog, '   ', str(li[j])
+                            print('non-equal optimization events', i, ':', j, file=infolog)
+                            print('   ', str(l0[j]), file=infolog)
+                            print('   ', str(li[j]), file=infolog)
                             #print >> infolog, "* ", j,
                             # if j < len(li):
                             #  msg =  str(li[j])
@@ -2278,8 +2270,8 @@ class _Maker(FunctionMaker):  # inheritance buys a few helper functions
                     raise StochasticOrder(infolog.getvalue())
                 else:
                     if self.verbose:
-                        print >> sys.stderr, "OPTCHECK: optimization", i, \
-                                 "of", len(li), "events was stable."
+                        print("OPTCHECK: optimization", i, \
+                                 "of", len(li), "events was stable.", file=sys.stderr)
             else:
                 fgraph0 = fgraph
 

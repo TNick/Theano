@@ -1,4 +1,5 @@
 """WRITEME"""
+from __future__ import print_function
 from copy import copy, deepcopy
 from sys import getsizeof
 import StringIO
@@ -23,7 +24,7 @@ def log_thunk_trace(value, f=sys.stderr):
     # in future, consider accepting `write` as arg rather than file
     # to support writing to a logger
     def write(msg):
-        print >> f, "log_thunk_trace: %s" % msg.strip()
+        print("log_thunk_trace: %s" % msg.strip(), file=f)
 
     if hasattr(value, '__thunk_trace__'):
         trace2 = value.__thunk_trace__
@@ -109,13 +110,17 @@ def raise_with_op(node, thunk=None, exc_info=None, storage_map=None):
             trace = ()
     exc_value.__thunk_trace__ = trace
     exc_value.__op_instance__ = node
-    if node in node.fgraph.toposort():
-        exc_value.__applynode_index__ = node.fgraph.toposort().index(node)
+    topo = node.fgraph.toposort()
+    if node in topo:
+        node_index = topo.index(node)
     else:
-        exc_value.__applynode_index__ = None
+        node_index = None
+    exc_value.__applynode_index__ = node_index
 
     hints = []
     detailed_err_msg = "\nApply node that caused the error: " + str(node)
+    if exc_value.__applynode_index__ is not None:
+        detailed_err_msg += "\nToposort index: %d" % node_index
 
     types = [getattr(ipt, 'type', 'No type') for ipt in node.inputs]
     detailed_err_msg += "\nInputs types: %s\n" % types
@@ -136,10 +141,11 @@ def raise_with_op(node, thunk=None, exc_info=None, storage_map=None):
             shapes = "The thunk don't have an inputs attributes."
             strides = "So we can't access the strides of inputs values"
             scalar_values = "And can't print its inputs scalar value"
-
+        clients = [[c[0] for c in var.clients] for var in node.outputs]
         detailed_err_msg += ("Inputs shapes: %s" % shapes +
                              "\nInputs strides: %s" % strides +
-                             "\nInputs values: %s\n" % scalar_values)
+                             "\nInputs values: %s" % scalar_values +
+                             "\nOutputs clients: %s\n" % clients)
     else:
         hints.append(
             "HINT: Use another linker then the c linker to"
@@ -384,7 +390,7 @@ class Container(object):
             else:
                 self.storage[0] = self.type.filter(value, **kwargs)
 
-        except Exception, e:
+        except Exception as e:
             e.args = e.args + (('Container name "%s"' % self.name),)
             raise
     data = property(__get__, __set__)

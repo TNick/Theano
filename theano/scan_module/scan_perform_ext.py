@@ -16,7 +16,7 @@ from theano.gof import cmodule
 _logger = logging.getLogger('theano.scan_module.scan_perform')
 
 
-version = 0.285  # must match constant returned in function get_version()
+version = 0.286  # must match constant returned in function get_version()
 
 need_reload = False
 
@@ -80,7 +80,7 @@ except ImportError:
             if not os.path.exists(loc):
                 try:
                     os.mkdir(loc)
-                except OSError, e:
+                except OSError as e:
                     assert e.errno == errno.EEXIST
                     assert os.path.exists(loc)
 
